@@ -33,7 +33,7 @@
                   chatView.innerHTML = '<div id="chatlog"></div><br/><input placeholder="Enter a message" type="text" id="entermessage"><button id="sendbutton">Send</button>';
                   isConnected = true;
                   connectionList.push(newConnect);
-                  $("connectbutton").addEventListener("click", ()=>{
+                  $("sendbutton").addEventListener("click", ()=>{
                     $("chatlog").innerHTML += '<p>' + userName + ": " + $("entermessage").value + "</div>";
                     connectionList.forEach((indConnection)=>{
                       indConnection.send({wonderMessage:{
@@ -59,7 +59,7 @@
           chatView.innerHTML = '<div id="chatlog"></div><br/><input placeholder="Enter a message" type="text" id="entermessage"><button id="sendbutton">Send</button>';
           isConnected = true;
           connectionList.push(newConnect);
-          $("connectbutton").addEventListener("click", ()=>{
+          $("sendbutton").addEventListener("click", ()=>{
             $("chatlog").innerHTML += '<p>' + userName + ": " + $("entermessage").value + "</div>";
             connectionList.forEach((indConnection)=>{
               indConnection.send({wonderMessage:{
