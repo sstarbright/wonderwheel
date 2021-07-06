@@ -38,7 +38,7 @@
                     connectionList.forEach((indConnection)=>{
                       indConnection.send({wonderMessage:{
                         userName: userName,
-                        wonderMessage: $("entermessage").value
+                        text: $("entermessage").value
                       }});
                     });
                     $("entermessage").value = "";
@@ -64,7 +64,7 @@
             connectionList.forEach((indConnection)=>{
               indConnection.send({wonderMessage:{
                 userName: userName,
-                wonderMessage: $("entermessage").value
+                text: $("entermessage").value
               }});
             });
             $("entermessage").value = "";
