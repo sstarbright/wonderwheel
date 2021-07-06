@@ -1,0 +1,71 @@
+<!DOCTYPE html>
+<html>
+	<head>
+		<meta charset="utf-8">
+		<title>Wonder Wheel!</title>
+	</head>
+	<body>
+    <div id="chatview">
+      
+    </div>
+    
+		<script src="https://unpkg.com/peerjs@1.3.1/dist/peerjs.min.js"></script>
+		<script>
+    let $ = (idname) => { return document.getElementById(idname)};
+    let peer = new Peer();
+    let chatView = $("chatview");
+    let connectionList = [];
+    let isConnected = false;
+    let userName = "";
+    peer.on('open', function(peerId) {
+      chatView.innerHTML = '<input placeholder="Enter a username" type="text" id="entername"><button id="okbutton">Ok</button>';
+      $("okbutton").addEventListener("onclick", ()=>{
+        if ($("entername").value.length > 0) {
+          userName = $("entername").value;
+          chatView.innerHTML = 'Your Connection ID is: ' + peerId + '<br/><input placeholder="Enter a connection id" type="text" id="enterconnect"><button id="connectbutton">Connect</button>';
+          $("connectbutton").addEventListener("onclick", ()=>{
+            if ($('enterconnect').value.length > 0) {
+              let connectId = $('enterconnect').value;
+              let newConnect = peer.connect(connectId);
+              newConnect.on('open', ()=>{
+                if (!isConnected) {
+                  chatView.innerHTML = '<div id="chatlog"></div><br/><input placeholder="Enter a message" type="text" id="entermessage"><button id="sendbutton">Send</button>';
+                  isConnected = true;
+                  connectionList.push(newConnect);
+                  $("connectbutton").addEventListener("onclick", ()=>{
+                    $("chatlog").innerHTML += '<p>' + userName + ": " + $("entermessage").value + "</div>";
+                    connectionList.forEach((indConnection)=>{
+                      indConnection.send({wonderMessage:{
+                        userName: userName,
+                        wonderMessage: $("entermessage").value
+                      }});
+                    });
+                    $("entermessage").value = "";
+                  });
+                }
+                newConnect.on('data', (data)=>{
+                  if ("wonderMessage" in data) {
+                    $("chatlog").innerHTML += '<p>' + data.wonderMessage.userName + ": " + data.wonderMessage.text + "</div>";
+                  }
+                });
+              });
+            }
+          });
+        }
+      });
+      peer.on('connection', function(newConnect) {
+        if (!isConnected) {
+          chatView.innerHTML = '<div id="chatlog"></div><br/><input placeholder="Enter a message" type="text" id="entermessage"><button id="sendbutton">Send</button>';
+          isConnected = true;
+          connectionList.push(newConnect);
+        }
+        newConnect.on('data', (data)=>{
+          if ("wonderMessage" in data) {
+            $("chatlog").innerHTML += '<p>' + data.wonderMessage.userName + ": " + data.wonderMessage.text + "</div>";
+          }
+        });
+      });
+    });
+		</script>
+	</body>
+</html>
