@@ -20375,10 +20375,14 @@
     </div>
     <svg id="fullwheel" width="100" height="100" style="width: 30%;height: 30%" viewBox="0 0 100 100">
       <defs>
-        <radialGradient id="centerSpot">
+        <radialGradient id="centerFill">
           <stop offset="0%" stop-color="#c2c2c2"></stop>
           <stop offset="100%" stop-color="#ededed"></stop>
         </radialGradient>
+        <linearGradient id="centerStroke">
+          <stop offset="0%" stop-color="#dbdbdb"></stop>
+          <stop offset="100%" stop-color="#949494"></stop>
+        </linearGradient>
       </defs>
       <clipPath id="sliceClip">
         <polygon points="50,0 50,50 63,2 100,1 100,0">
@@ -20393,8 +20397,11 @@
         ["#F07970","#CC393A"]
       ];
       let wheelAnchor = null;
-      let wheelNewRotation = 0;
+      let wheelGrabRotation = 0;
       let wheelRotation = 0;
+      let wheelRotSpeed = 0;
+      let wheelTargetRotate = 0;
+      let spinStartTime = null;
       let puzzleList = document.getElementById("puzzlelist").firstElementChild.firstElementChild.children;
       let sliceColor = "red";
       let fullWheel = document.getElementById("fullwheel");
@@ -20403,6 +20410,12 @@
           fullWheel.clientLeft + fullWheel.clientWidth/2,
           fullWheel.clientTop + fullWheel.clientHeight/2
         ]
+      }
+      function toPureRotation(matrix) {
+        var values = matrix.split('(')[1].split(')')[0].split(',');
+        var sin = values[1]; // 0.5
+
+        return Math.round(Math.asin(sin) * (180/Math.PI));
       }
       document.getElementById("getpuzzle").addEventListener("click", ()=>{
         let puzzleIndex = Math.floor(Math.random() * puzzleList.length);
@@ -20416,24 +20429,39 @@
         sliceColor = wheelColors[Math.floor(Math.random() * wheelColors.length)];
         fullWheel.innerHTML += sliceTemplate({sliceAngle: sliceCount*15, sliceColor: sliceColor[0], strokeColor: sliceColor[1]});
       }
-      fullWheel.innerHTML += '<circle cx="50" cy="50" r="5" stroke="#c2c2c2" fill="url(#centerSpot)" stroke-width="0.5" />';
+      fullWheel.innerHTML += '<circle cx="50" cy="50" r="5" stroke="url(#centerStroke)" fill="url(#centerFill)" stroke-width="0.5" />';
       document.addEventListener("pointermove", (e)=>{
         if (wheelAnchor) {
-          wheelNewRotation = wheelRotation+((Math.atan2(e.pageY-getWheelCenter()[1], e.pageX-getWheelCenter()[0]) * 180 / Math.PI)-wheelAnchor);
-          fullWheel.style.transform = "rotate(" + wheelNewRotation + "deg)"
+          let wheelNewRotation = wheelRotation+((Math.atan2(e.pageY-getWheelCenter()[1], e.pageX-getWheelCenter()[0]) * 180 / Math.PI)-wheelAnchor);
+          wheelRotSpeed = wheelGrabRotation-wheelNewRotation;
+          wheelGrabRotation = wheelNewRotation;
+          fullWheel.style.transform = "rotate(" + wheelGrabRotation + "deg)";
         }
       });
       document.addEventListener("pointerup", (e)=>{
         if (wheelAnchor) {
-          wheelRotation = wheelNewRotation;
+          spinStartTime = new Date();
+          wheelRotation = wheelGrabRotation;
           wheelAnchor = null;
+          fullWheel.style.transition = "transform 5s ease-out";
+          fullWheel.style.transform = "rotate(" + (wheelRotSpeed * -100) + "deg)";
+          fullWheel.style.animationName = "wheelSpin";
         }
       });
       for (let childCount = 0; childCount < fullWheel.children.length; childCount++) {
         if (fullWheel.children[childCount].tagName === "g" || fullWheel.children[childCount].tagName === "circle") {
           fullWheel.children[childCount].addEventListener("pointerdown", (e)=>{
+            let oldTransform = getComputedStyle(fullWheel).transform;
+            if (oldTransform !== "none")
+              oldTransform = toPureRotation(getComputedStyle(fullWheel).transform);
+            else
+              oldTransform = wheelRotation;
+            fullWheel.style.transform = "rotate(" + oldTransform + "deg)";
+            fullWheel.style.transition = "";
             wheelAnchor = Math.atan2(e.pageY-getWheelCenter()[1], e.pageX-getWheelCenter()[0]) * 180 / Math.PI;
-            wheelNewRotation = wheelRotation;
+            wheelGrabRotation = parseFloat(oldTransform)-wheelAnchor;
+            wheelRotation = parseFloat(oldTransform);
+            wheelRotSpeed = 0;
           });
         }
       }
